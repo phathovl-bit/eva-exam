@@ -145,7 +145,7 @@
       <h1>EVA - Hệ thống thi trực tuyến</h1>
       <p class="muted">Trang này đọc link phòng thi, kiểm tra học sinh, tạo attempt, tải đề, đếm giờ và nộp bài về Supabase.</p>
       <div class="notice warn small">
-        Nhớ kt <b>số báo danh</b> và <b>họ tên và mk</b> để xác nhận
+        Nhớ thay <b>SUPABASE_URL</b> và <b>SUPABASE_ANON_KEY</b> trong code trước khi deploy.
       </div>
     </div>
 
@@ -213,8 +213,8 @@
     // ==============================
     // CẤU HÌNH SUPABASE - BẮT BUỘC THAY
     // ==============================
-    const SUPABASE_URL = 'https://trujeesftlzcackcjtbw.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_K3zBdXUno2IY3nRTJrFg8w_ICroeFwo';
+    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
     // ==============================
     // STATE
@@ -384,7 +384,7 @@
         await loadExam();
       } catch (error) {
         console.error(error);
-        showMessage('loginMessage', 'error', 'Có lỗi khi vào phòng thi. Kiểm tra lại cấu hình Supabase và dữ liệu bảng.');
+        showMessage('loginMessage', 'error', `Có lỗi khi vào phòng thi: ${error?.message || 'Không rõ lỗi'}`);
       } finally {
         qs('loginBtn').disabled = false;
         qs('loginBtn').textContent = 'Vào làm bài';
@@ -471,7 +471,7 @@
         showMessage('examMessage', 'info', 'Đã vào phòng thi thành công. Hệ thống sẽ tự nộp khi hết giờ.');
       } catch (error) {
         console.error(error);
-        showMessage('loginMessage', 'error', 'Không tải được đề thi.');
+        showMessage('loginMessage', 'error', `Không tải được đề thi: ${error?.message || 'Không rõ lỗi'}`);
       }
     }
 
@@ -557,7 +557,7 @@
         isSubmitted = false;
         qs('submitBtn').disabled = false;
         qs('submitBtn').textContent = 'Nộp bài';
-        showMessage('examMessage', 'error', 'Nộp bài thất bại. Kiểm tra function submit_attempt hoặc RLS/API.');
+        showMessage('examMessage', 'error', `Nộp bài thất bại: ${error?.message || 'Không rõ lỗi'}`);
       }
     }
 
@@ -623,3 +623,4 @@
   </script>
 </body>
 </html>
+
