@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVA - Thi trực tuyến</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .container {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      margin-bottom: 16px;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    .muted { color: #9ca3af; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 760px) {
+      .row { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    input, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #374151;
+      padding: 12px 14px;
+      font-size: 15px;
+    }
+    input {
+      background: #0b1220;
+      color: #f9fafb;
+    }
+    button {
+      background: #22c55e;
+      color: #06210f;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover { opacity: 0.95; }
+    button.secondary {
+      background: #374151;
+      color: #f9fafb;
+    }
+    button.danger {
+      background: #ef4444;
+      color: #fff;
+    }
+    .hidden { display: none !important; }
+    .question {
+      border: 1px solid #263043;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: #0b1220;
+    }
+    .choice {
+      display: block;
+      padding: 10px 12px;
+      border: 1px solid #243041;
+      border-radius: 12px;
+      margin: 8px 0;
+      cursor: pointer;
+      background: #0f172a;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .timer {
+      background: #1d4ed8;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-weight: 700;
+      min-width: 180px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #1f2937;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+    .notice {
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .notice.info { background: #0c4a6e; color: #e0f2fe; }
+    .notice.warn { background: #78350f; color: #fef3c7; }
+    .notice.error { background: #7f1d1d; color: #fee2e2; }
+    .footer-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .footer-actions button {
+      width: auto;
+      min-width: 180px;
+    }
+    .small { font-size: 13px; }
+    .success-box {
+      text-align: center;
+      padding: 28px 16px;
+    }
+    .success-score {
+      font-size: 42px;
+      font-weight: 800;
+      margin: 12px 0;
+      color: #22c55e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>EVA - Hệ thống thi trực tuyến</h1>
+      <p class="muted">Trang này đọc link phòng thi, kiểm tra học sinh, tạo attempt, tải đề, đếm giờ và nộp bài về Supabase.</p>
+      <div class="notice warn small">
+        Nhớ kt <b>số báo danh</b> và <b>họ tên và mk</b> để xác nhận
+      </div>
+    </div>
+
+    <section id="loginSection" class="card">
+      <h2>Vào phòng thi</h2>
+      <div id="loginMessage"></div>
+      <div class="row">
+        <div>
+          <label for="roomCode">Mã phòng thi</label>
+          <input id="roomCode" type="text" placeholder="Ví dụ: PHONG1" />
+        </div>
+        <div>
+          <label for="studentCode">Số báo danh</label>
+          <input id="studentCode" type="text" placeholder="Ví dụ: SBD001" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="studentName">Họ và tên</label>
+          <input id="studentName" type="text" placeholder="Ví dụ: Nguyen Van A" />
+        </div>
+        <div>
+          <label for="studentPassword">Mật khẩu</label>
+          <input id="studentPassword" type="password" placeholder="Nhập mật khẩu" />
+        </div>
+      </div>
+      <div style="margin-top: 14px;">
+        <button id="loginBtn">Vào làm bài</button>
+      </div>
+    </section>
+
+    <section id="examSection" class="hidden">
+      <div class="card">
+        <div class="topbar">
+          <div>
+            <h2 id="examTitle">Đề thi</h2>
+            <div class="badge" id="roomBadge">Phòng thi</div>
+            <div class="badge" id="studentBadge">Học sinh</div>
+          </div>
+          <div class="timer" id="timerBox">--:--</div>
+        </div>
+        <div id="examMessage" style="margin-top: 12px;"></div>
+      </div>
+
+      <div class="card">
+        <div id="questionsContainer"></div>
+        <div class="footer-actions">
+          <button class="secondary" id="checkBtn">Kiểm tra câu còn trống</button>
+          <button class="danger" id="submitBtn">Nộp bài</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultSection" class="card hidden">
+      <div class="success-box">
+        <h2>Nộp bài thành công</h2>
+        <p class="muted">Kết quả đã được gửi về cho giáo viên.</p>
+        <div class="success-score" id="scoreText">0</div>
+        <p id="resultMeta"></p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ==============================
+    // CẤU HÌNH SUPABASE - BẮT BUỘC THAY
+    // ==============================
+    const SUPABASE_URL = 'https://trujeesftlzcackcjtbw.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_K3zBdXUno2IY3nRTJrFg8w_ICroeFwo';
+
+    // ==============================
+    // STATE
+    // ==============================
+    let currentRoom = null;
+    let currentAttempt = null;
+    let currentQuestions = [];
+    let answersMap = {};
+    let timerInterval = null;
+    let remainingSeconds = 0;
+    let isSubmitted = false;
+
+    // ==============================
+    // HELPERS
+    // ==============================
+    function qs(id) {
+      return document.getElementById(id);
+    }
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function showMessage(targetId, type, text) {
+      const el = qs(targetId);
+      el.innerHTML = `<div class="notice ${type}">${text}</div>`;
+    }
+
+    function clearMessage(targetId) {
+      qs(targetId).innerHTML = '';
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatTime(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    async function apiFetch(path, options = {}) {
+      const res = await fetch(`${SUPABASE_URL}${path}`, {
+        ...options,
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Lỗi API');
+      }
+
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    // ==============================
+    // PHẦN ĐĂNG NHẬP PHÒNG THI
+    // ==============================
+    async function loadRoomCodeFromLink() {
+      const room = getQueryParam('room');
+      if (room) {
+        qs('roomCode').value = room;
+      }
+    }
+
+    async function findRoomByCode(roomCode) {
+      const data = await apiFetch(`/rest/v1/exam_rooms?room_code=eq.${encodeURIComponent(roomCode)}&select=*`);
+      return data && data.length ? data[0] : null;
+    }
+
+    function isRoomOpen(room) {
+      if (!room || room.is_active === false) return false;
+      const now = new Date();
+      if (room.start_at && now < new Date(room.start_at)) return false;
+      if (room.end_at && now > new Date(room.end_at)) return false;
+      return true;
+    }
+
+    async function validateStudent(roomId, studentCode, studentName, studentPassword) {
+      const path = `/rest/v1/room_students?room_id=eq.${roomId}` +
+        `&student_code=eq.${encodeURIComponent(studentCode)}` +
+        `&student_name=eq.${encodeURIComponent(studentName)}` +
+        `&student_password=eq.${encodeURIComponent(studentPassword)}` +
+        `&select=*`;
+      const data = await apiFetch(path);
+      return data && data.length ? data[0] : null;
+    }
+
+    async function createAttempt(room, studentName, studentCode) {
+      const payload = {
+        room_id: room.id,
+        exam_id: room.exam_id,
+        student_name: studentName,
+        student_code: studentCode,
+        username: studentCode,
+        status: 'in_progress',
+        started_at: new Date().toISOString()
+      };
+
+      const data = await apiFetch('/rest/v1/attempts', {
+        method: 'POST',
+        headers: {
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      return data && data.length ? data[0] : null;
+    }
+
+    async function handleLogin() {
+      try {
+        clearMessage('loginMessage');
+
+        const roomCode = qs('roomCode').value.trim();
+        const studentCode = qs('studentCode').value.trim();
+        const studentName = qs('studentName').value.trim();
+        const studentPassword = qs('studentPassword').value.trim();
+
+        if (!roomCode || !studentCode || !studentName || !studentPassword) {
+          showMessage('loginMessage', 'error', 'Vui lòng nhập đầy đủ mã phòng, số báo danh, họ tên và mật khẩu.');
+          return;
+        }
+
+        qs('loginBtn').disabled = true;
+        qs('loginBtn').textContent = 'Đang kiểm tra...';
+
+        const room = await findRoomByCode(roomCode);
+        if (!room) {
+          showMessage('loginMessage', 'error', 'Không tìm thấy phòng thi. Kiểm tra lại link hoặc mã phòng.');
+          return;
+        }
+
+        if (!isRoomOpen(room)) {
+          showMessage('loginMessage', 'error', 'Phòng thi hiện chưa mở hoặc đã hết thời gian.');
+          return;
+        }
+
+        const student = await validateStudent(room.id, studentCode, studentName, studentPassword);
+        if (!student) {
+          showMessage('loginMessage', 'error', 'Sai số báo danh, họ tên hoặc mật khẩu.');
+          return;
+        }
+
+        const attempt = await createAttempt(room, studentName, studentCode);
+        if (!attempt) {
+          showMessage('loginMessage', 'error', 'Không tạo được lượt làm bài.');
+          return;
+        }
+
+        currentRoom = room;
+        currentAttempt = attempt;
+
+        await loadExam();
+      } catch (error) {
+        console.error(error);
+        showMessage('loginMessage', 'error', 'Có lỗi khi vào phòng thi. Kiểm tra lại cấu hình Supabase và dữ liệu bảng.');
+      } finally {
+        qs('loginBtn').disabled = false;
+        qs('loginBtn').textContent = 'Vào làm bài';
+      }
+    }
+
+    // ==============================
+    // PHẦN TẢI ĐỀ THI
+    // ==============================
+    async function loadExamMeta(examId) {
+      const data = await apiFetch(`/rest/v1/exams?id=eq.${examId}&select=*`);
+      return data && data.length ? data[0] : null;
+    }
+
+    async function loadQuestions(examId) {
+      return await apiFetch(`/rest/v1/questions_public?exam_id=eq.${examId}&select=*&order=idx.asc`);
+    }
+
+    function renderQuestions(questions) {
+      const container = qs('questionsContainer');
+      container.innerHTML = '';
+
+      questions.forEach((q, index) => {
+        const choiceList = Array.isArray(q.choices) ? q.choices : [];
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+        const htmlChoices = choiceList.map((choice, choiceIndex) => {
+          const choiceValue = choiceIndex + 1;
+          return `
+            <label class="choice">
+              <input
+                type="radio"
+                name="question_${q.id}"
+                value="${choiceValue}"
+                onchange="selectAnswer(${q.id}, ${choiceValue})"
+                style="width:auto; margin-right:10px;"
+              />
+              <b>${letters[choiceIndex] || choiceValue}.</b> ${escapeHtml(choice)}
+            </label>
+          `;
+        }).join('');
+
+        const card = document.createElement('div');
+        card.className = 'question';
+        card.id = `question-card-${q.id}`;
+        card.innerHTML = `
+          <h3>Câu ${index + 1}</h3>
+          <p>${escapeHtml(q.prompt)}</p>
+          ${htmlChoices}
+          <p class="muted small" id="status-${q.id}">Chưa chọn đáp án</p>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    async function loadExam() {
+      try {
+        const exam = await loadExamMeta(currentRoom.exam_id);
+        const questions = await loadQuestions(currentRoom.exam_id);
+
+        if (!exam) {
+          showMessage('loginMessage', 'error', 'Không tìm thấy đề thi.');
+          return;
+        }
+
+        if (!questions || !questions.length) {
+          showMessage('loginMessage', 'error', 'Đề thi chưa có câu hỏi.');
+          return;
+        }
+
+        currentQuestions = questions;
+        answersMap = {};
+
+        qs('examTitle').textContent = exam.title || 'Đề thi';
+        qs('roomBadge').textContent = `Phòng: ${currentRoom.room_name} (${currentRoom.room_code})`;
+        qs('studentBadge').textContent = `${currentAttempt.student_name} - ${currentAttempt.student_code}`;
+
+        renderQuestions(questions);
+        startTimer((exam.duration_minutes || 15) * 60);
+
+        qs('loginSection').classList.add('hidden');
+        qs('examSection').classList.remove('hidden');
+        showMessage('examMessage', 'info', 'Đã vào phòng thi thành công. Hệ thống sẽ tự nộp khi hết giờ.');
+      } catch (error) {
+        console.error(error);
+        showMessage('loginMessage', 'error', 'Không tải được đề thi.');
+      }
+    }
+
+    // ==============================
+    // PHẦN LÀM BÀI
+    // ==============================
+    window.selectAnswer = function(questionId, selected) {
+      answersMap[questionId] = selected;
+      const status = qs(`status-${questionId}`);
+      if (status) {
+        status.textContent = `Đã chọn đáp án ${selected}`;
+      }
+    }
+
+    function getUnansweredQuestions() {
+      return currentQuestions.filter(q => !answersMap[q.id]);
+    }
+
+    function checkUnanswered() {
+      const unanswered = getUnansweredQuestions();
+      if (!unanswered.length) {
+        showMessage('examMessage', 'info', 'Bạn đã làm hết tất cả câu hỏi.');
+        return;
+      }
+
+      const list = unanswered.map(q => q.idx || q.id).join(', ');
+      showMessage('examMessage', 'warn', `Bạn còn ${unanswered.length} câu chưa làm: ${list}`);
+    }
+
+    function buildAnswersPayload() {
+      return currentQuestions
+        .filter(q => answersMap[q.id])
+        .map(q => ({ question_id: q.id, selected: Number(answersMap[q.id]) }));
+    }
+
+    async function updateAttemptAfterSubmit() {
+      try {
+        await apiFetch(`/rest/v1/attempts?id=eq.${currentAttempt.id}`, {
+          method: 'PATCH',
+          headers: {
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify({
+            submitted_at: new Date().toISOString(),
+            duration_seconds: Math.max(0, ((currentRoom.end_at ? Math.floor((new Date(currentRoom.end_at) - new Date(currentAttempt.started_at)) / 1000) : 0))),
+            status: 'submitted'
+          })
+        });
+      } catch (error) {
+        console.error('Lỗi cập nhật attempt sau submit:', error);
+      }
+    }
+
+    async function submitExam(force = false) {
+      if (isSubmitted) return;
+
+      const unanswered = getUnansweredQuestions();
+      if (!force && unanswered.length) {
+        const ok = window.confirm(`Bạn còn ${unanswered.length} câu chưa trả lời. Vẫn nộp bài chứ?`);
+        if (!ok) return;
+      }
+
+      try {
+        isSubmitted = true;
+        qs('submitBtn').disabled = true;
+        qs('submitBtn').textContent = 'Đang nộp bài...';
+
+        const payload = {
+          attempt_id: currentAttempt.id,
+          answers: buildAnswersPayload()
+        };
+
+        const result = await apiFetch('/rest/v1/rpc/submit_attempt', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        await updateAttemptAfterSubmit();
+        stopTimer();
+        showResult(result);
+      } catch (error) {
+        console.error(error);
+        isSubmitted = false;
+        qs('submitBtn').disabled = false;
+        qs('submitBtn').textContent = 'Nộp bài';
+        showMessage('examMessage', 'error', 'Nộp bài thất bại. Kiểm tra function submit_attempt hoặc RLS/API.');
+      }
+    }
+
+    function showResult(result) {
+      const score = result?.score ?? 0;
+      const correct = result?.correct ?? score;
+      const total = result?.total ?? currentQuestions.length;
+
+      qs('scoreText').textContent = score;
+      qs('resultMeta').textContent = `Đúng ${correct}/${total} câu.`;
+      qs('examSection').classList.add('hidden');
+      qs('resultSection').classList.remove('hidden');
+    }
+
+    // ==============================
+    // TIMER
+    // ==============================
+    function startTimer(seconds) {
+      remainingSeconds = seconds;
+      qs('timerBox').textContent = formatTime(remainingSeconds);
+
+      timerInterval = setInterval(() => {
+        remainingSeconds -= 1;
+        qs('timerBox').textContent = formatTime(Math.max(remainingSeconds, 0));
+
+        if (remainingSeconds <= 60 && remainingSeconds > 0) {
+          showMessage('examMessage', 'warn', `Còn ${remainingSeconds} giây. Hãy kiểm tra lại bài.`);
+        }
+
+        if (remainingSeconds <= 0) {
+          stopTimer();
+          showMessage('examMessage', 'warn', 'Hết giờ. Hệ thống đang tự nộp bài...');
+          submitExam(true);
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    // ==============================
+    // EVENTS
+    // ==============================
+    qs('loginBtn').addEventListener('click', handleLogin);
+    qs('checkBtn').addEventListener('click', checkUnanswered);
+    qs('submitBtn').addEventListener('click', () => submitExam(false));
+
+    window.addEventListener('beforeunload', function (e) {
+      if (!isSubmitted && currentAttempt) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // ==============================
+    // INIT
+    // ==============================
+    loadRoomCodeFromLink();
+  </script>
+</body>
+</html>
